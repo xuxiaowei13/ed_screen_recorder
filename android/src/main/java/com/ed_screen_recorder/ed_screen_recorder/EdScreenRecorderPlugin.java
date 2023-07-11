@@ -156,15 +156,15 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
                         micPermission = true;
                     }
 
-                    if (ContextCompat.checkSelfPermission(flutterPluginBinding.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) {
+                    // if (ContextCompat.checkSelfPermission(flutterPluginBinding.getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    //         != PackageManager.PERMISSION_GRANTED) {
 
-                        ActivityCompat.requestPermissions(activity,
-                                new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                444);
-                    } else {
+                    //     ActivityCompat.requestPermissions(activity,
+                    //             new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    //             444);
+                    // } else {
                         mediaPermission = true;
-                    }
+                    // }
                     if (micPermission && mediaPermission) {
                         success = startRecordingScreen();
                     }
