@@ -27,7 +27,6 @@ class EdScreenRecorder {
       required bool audioEnable}) async {
     var uuid = const Uuid();
     String videoHash = uuid.v1().replaceAll('-', '');
-    var dateNow = DateTime.now().microsecondsSinceEpoch;
     var response = await _channel.invokeMethod('startRecordScreen', {
       "audioenable": audioEnable,
       "filename": fileName,
@@ -38,7 +37,6 @@ class EdScreenRecorder {
       "fileoutputformat": fileOutputFormat,
       "fileextension": fileExtension,
       "videohash": videoHash,
-      "startdate": dateNow,
       "width": width ?? 0,
       "height": height ?? 0,
     });
@@ -60,10 +58,7 @@ class EdScreenRecorder {
   }
 
   Future<Map<String, dynamic>> stopRecord() async {
-    var dateNow = DateTime.now().microsecondsSinceEpoch;
-    var response = await _channel.invokeMethod('stopRecordScreen', {
-      "enddate": dateNow,
-    });
+    var response = await _channel.invokeMethod('stopRecordScreen');
 
     var formatResponse = RecordOutput.fromJson(json.decode(response));
     if (kDebugMode) {

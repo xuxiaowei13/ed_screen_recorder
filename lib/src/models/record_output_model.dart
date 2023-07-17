@@ -25,7 +25,7 @@ class RecordOutput {
   String? message;
   String videoHash;
   int startDate;
-  int? endDate;
+  int endDate;
 
   factory RecordOutput.fromJson(Map<String, dynamic> json) {
     return RecordOutput(

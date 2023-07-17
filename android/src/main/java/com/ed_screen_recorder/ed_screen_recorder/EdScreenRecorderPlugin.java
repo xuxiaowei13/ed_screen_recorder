@@ -135,13 +135,10 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
                     fileOutputFormat = call.argument("fileoutputformat");
                     fileExtension = call.argument("fileextension");
                     videoHash = call.argument("videohash");
-                    startDate = call.argument("startdate");
                     width = call.argument("width");
                     height = call.argument("height");
                     customSettings(videoFrame, videoBitrate, fileOutputFormat, addTimeCode, fileName, width, height);
-                    if (dirPathToSave != null) {
-                        setOutputPath(addTimeCode, fileName, dirPathToSave);
-                    }
+
                     if (isAudioEnabled) {
                         if (ContextCompat.checkSelfPermission(flutterPluginBinding.getApplicationContext(), Manifest.permission.RECORD_AUDIO)
                                 != PackageManager.PERMISSION_GRANTED) {
@@ -195,7 +192,6 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
                 break;
             case "stopRecordScreen":
                 stopRecordingResult = result;
-                endDate = call.argument("enddate");
                 hbRecorder.stopScreenRecording();
                 break;
             default:
@@ -227,6 +223,26 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (data != null) {
+                    try {
+                        if (dirPathToSave != null) {
+                            setOutputPath(addTimeCode, fileName, dirPathToSave);
+                        }
+                    } catch (Exception e) {
+                        Map<Object, Object> dataMap = new HashMap<Object, Object>();
+                        dataMap.put("success", false);
+                        dataMap.put("isProgress", false);
+                        dataMap.put("file", "");
+                        dataMap.put("eventname", "startRecordScreen Error");
+                        dataMap.put("message", e.getMessage());
+                        dataMap.put("videohash", videoHash);
+                        dataMap.put("startdate", startDate);
+                        dataMap.put("enddate", endDate);
+                        JSONObject jsonObj = new JSONObject(dataMap);
+                        startRecordingResult.success(jsonObj.toString());
+                        startRecordingResult = null;
+                        recentResult = null;
+                    }
+                    
                     hbRecorder.startScreenRecording(data, resultCode);
                 }
             }
@@ -258,8 +274,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         dataMap.put("eventname", "startRecordScreen");
         dataMap.put("message", "Started Video");
         dataMap.put("videohash", videoHash);
+        startDate = System.currentTimeMillis();
         dataMap.put("startdate", startDate);
-        dataMap.put("enddate", null);
+        dataMap.put("enddate", endDate);
         JSONObject jsonObj = new JSONObject(dataMap);
         if (startRecordingResult != null) {
             startRecordingResult.success(jsonObj.toString());
@@ -283,6 +300,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         dataMap.put("message", "Paused Video");
         dataMap.put("videohash", videoHash);
         dataMap.put("startdate", startDate);
+        endDate = System.currentTimeMillis();
         dataMap.put("enddate", endDate);
         JSONObject jsonObj = new JSONObject(dataMap);
         try {
@@ -374,7 +392,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     }
 
     private String generateFileName(String fileName, boolean addTimeCode) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.getDefault());
         Date curDate = new Date(System.currentTimeMillis());
         if (addTimeCode) {
             return fileName + "-" + formatter.format(curDate).replace(" ", "");
