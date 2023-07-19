@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:video_player/video_player.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,6 +41,8 @@ class _HomePageState extends State<HomePage> {
   EdScreenRecorder? screenRecorder;
   Map<String, dynamic>? _response;
   bool inProgress = false;
+  VideoPlayerController? _controller;
+  final TextEditingController _textEditingController = TextEditingController();
 
   @override
   void initState() {
@@ -78,7 +81,9 @@ class _HomePageState extends State<HomePage> {
       var stopResponse = await screenRecorder?.stopRecord();
       setState(() {
         _response = stopResponse;
+        _controller = VideoPlayerController.file(_response?['file']);
       });
+      _controller!.initialize();
     } on PlatformException {
       kDebugMode
           ? debugPrint("Error: An error occurred while stopping recording.")
@@ -106,6 +111,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void seekToTimestamp() {
+    // calculate the cursor relative to the start timestamp
+    if (_controller != null && _controller!.value.isInitialized) {
+      int targetTimestamp = int.parse(_textEditingController.value.text);
+      if (_response != null) {
+        int startTimestamp = _response?['startdate'];
+        int cursor = targetTimestamp - startTimestamp;
+        _controller?.seekTo(Duration(milliseconds: cursor));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,30 +130,48 @@ class _HomePageState extends State<HomePage> {
         title: const Text("Screen Recording Debug"),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("File: ${(_response?['file'] as File?)?.path}"),
-            Text("Status: ${(_response?['success']).toString()}"),
-            Text("Event: ${_response?['eventname']}"),
-            Text("Progress: ${(_response?['progressing']).toString()}"),
-            Text("Message: ${_response?['message']}"),
-            Text("Video Hash: ${_response?['videohash']}"),
-            Text("Start Date: ${(_response?['startdate']).toString()}"),
-            Text("End Date: ${(_response?['enddate']).toString()}"),
-            ElevatedButton(
-                onPressed: () => startRecord(fileName: "eren"),
-                child: const Text('START RECORD')),
-            ElevatedButton(
-                onPressed: () => resumeRecord(),
-                child: const Text('RESUME RECORD')),
-            ElevatedButton(
-                onPressed: () => pauseRecord(),
-                child: const Text('PAUSE RECORD')),
-            ElevatedButton(
-                onPressed: () => stopRecord(),
-                child: const Text('STOP RECORD')),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("File: ${(_response?['file'] as File?)?.path}"),
+              Text("Status: ${(_response?['success']).toString()}"),
+              Text("Event: ${_response?['eventname']}"),
+              Text("Progress: ${(_response?['progressing']).toString()}"),
+              Text("Message: ${_response?['message']}"),
+              Text("Video Hash: ${_response?['videohash']}"),
+              Text("Start Date: ${(_response?['startdate']).toString()}"),
+              Text("End Date: ${(_response?['enddate']).toString()}"),
+              ElevatedButton(
+                  onPressed: () => startRecord(fileName: "eren"),
+                  child: const Text('START RECORD')),
+              ElevatedButton(
+                  onPressed: () => resumeRecord(),
+                  child: const Text('RESUME RECORD')),
+              ElevatedButton(
+                  onPressed: () => pauseRecord(),
+                  child: const Text('PAUSE RECORD')),
+              ElevatedButton(
+                  onPressed: () => stopRecord(),
+                  child: const Text('STOP RECORD')),
+              // add a text field for the target timestamp
+              TextField(
+                controller: _textEditingController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter a timestamp',
+                ),
+              ),
+              ElevatedButton(
+                  onPressed: () => seekToTimestamp(),
+                  child: const Text('SEEK TO TIMESTAMP')),
+              // add a video viewer
+              if (_controller != null)
+                AspectRatio(
+                  aspectRatio: _controller!.value.aspectRatio,
+                  child: VideoPlayer(_controller!),
+                ),
+            ],
+          ),
         ),
       ),
     );
