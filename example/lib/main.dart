@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
         videoBitrate: 1000000,
         videoFrame: 15,
         width: 480,
-        height: 720,
+        height: 960,
       );
       setState(() {
         _response = startResponse;
@@ -83,7 +83,8 @@ class _HomePageState extends State<HomePage> {
         _response = stopResponse;
         _controller = VideoPlayerController.file(_response?['file']);
       });
-      _controller!.initialize();
+      await _controller!.initialize();
+      setState(() {});
     } on PlatformException {
       kDebugMode
           ? debugPrint("Error: An error occurred while stopping recording.")
@@ -111,14 +112,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void seekToTimestamp() {
+  Future<void> seekToTimestamp() async {
     // calculate the cursor relative to the start timestamp
     if (_controller != null && _controller!.value.isInitialized) {
       int targetTimestamp = int.parse(_textEditingController.value.text);
       if (_response != null) {
         int startTimestamp = _response?['startdate'];
         int cursor = targetTimestamp - startTimestamp;
-        _controller?.seekTo(Duration(milliseconds: cursor));
+        await _controller?.seekTo(Duration(milliseconds: cursor));
       }
     }
   }
@@ -165,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () => seekToTimestamp(),
                   child: const Text('SEEK TO TIMESTAMP')),
               // add a video viewer
-              if (_controller != null)
+              if (_controller != null && _controller!.value.isInitialized)
                 AspectRatio(
                   aspectRatio: _controller!.value.aspectRatio,
                   child: VideoPlayer(_controller!),
