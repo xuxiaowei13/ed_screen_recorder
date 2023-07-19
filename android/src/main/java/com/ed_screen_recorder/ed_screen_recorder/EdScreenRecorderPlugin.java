@@ -55,6 +55,8 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     private HBRecorder hbRecorder;
     boolean isAudioEnabled;
     String fileName;
+
+    String completeFileName;
     String dirPathToSave;
     boolean addTimeCode;
     String filePath;
@@ -269,7 +271,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         if (dirPathToSave != null) {
             dataMap.put("file", filePath + "." + fileExtension);
         } else {
-            dataMap.put("file", generateFileName(fileName, addTimeCode) + "." + fileExtension);
+            dataMap.put("file", getCompleteFileName(fileName, addTimeCode) + "." + fileExtension);
         }
         dataMap.put("eventname", "startRecordScreen");
         dataMap.put("message", "Started Video");
@@ -294,7 +296,7 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         if (dirPathToSave != null) {
             dataMap.put("file", filePath + "." + fileExtension);
         } else {
-            dataMap.put("file", generateFileName(fileName, addTimeCode) + "." + fileExtension);
+            dataMap.put("file", getCompleteFileName(fileName, addTimeCode) + "." + fileExtension);
         }
         dataMap.put("eventname", "stopRecordScreen");
         dataMap.put("message", "Paused Video");
@@ -372,32 +374,34 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
             hbRecorder.setScreenDimensions(height, width);
         }
         if (dirPathToSave == null) {
-            hbRecorder.setFileName(generateFileName(fileName, addTimeCode));
+            hbRecorder.setFileName(getCompleteFileName(fileName, addTimeCode));
         }
     }
 
     private void setOutputPath(boolean addTimeCode, String fileName, String dirPathToSave) throws IOException {
-        hbRecorder.setFileName(generateFileName(fileName, addTimeCode));
+        hbRecorder.setFileName(getCompleteFileName(fileName, addTimeCode));
         if (dirPathToSave != null && !dirPathToSave.equals("")) {
             File dirFile = new File(dirPathToSave);
             hbRecorder.setOutputPath(dirFile.getAbsolutePath());
-            filePath = dirFile.getAbsolutePath() + "/" + generateFileName(fileName, addTimeCode);
+            filePath = dirFile.getAbsolutePath() + "/" + getCompleteFileName(fileName, addTimeCode);
         } else {
             hbRecorder.setOutputPath(
                     flutterPluginBinding.getApplicationContext().getExternalCacheDir().getAbsolutePath());
             filePath = flutterPluginBinding.getApplicationContext().getExternalCacheDir().getAbsolutePath() + "/"
-                    + generateFileName(fileName, addTimeCode);
+                    + getCompleteFileName(fileName, addTimeCode);
         }
 
     }
 
-    private String generateFileName(String fileName, boolean addTimeCode) {
+    private String getCompleteFileName(String fileName, boolean addTimeCode) {
+        if (completeFileName != null) return completeFileName;
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.getDefault());
         Date curDate = new Date(System.currentTimeMillis());
         if (addTimeCode) {
-            return fileName + "-" + formatter.format(curDate).replace(" ", "");
+            completeFileName = fileName + "-" + formatter.format(curDate).replace(" ", "");
         } else {
-            return fileName;
+            completeFileName = fileName;
         }
+        return completeFileName;
     }
 }
