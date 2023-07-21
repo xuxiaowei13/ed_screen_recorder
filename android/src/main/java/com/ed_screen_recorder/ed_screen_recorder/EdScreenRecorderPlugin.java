@@ -74,6 +74,8 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
     boolean micPermission = false;
     boolean mediaPermission = false;
 
+    private MethodChannel channel;
+
     private void initializeResults() {
         startRecordingResult = null;
         stopRecordingResult = null;
@@ -82,29 +84,25 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         recentResult = null;
     }
 
-    public static void registerWith(Registrar registrar) {
-        final EdScreenRecorderPlugin instance = new EdScreenRecorderPlugin();
-        instance.setupChannels(registrar.messenger(), registrar.activity());
-        registrar.addActivityResultListener(instance);
-    }
-
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
         this.flutterPluginBinding = binding;
+        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "ed_screen_recorder");
+        channel.setMethodCallHandler(this);
         hbRecorder = new HBRecorder(flutterPluginBinding.getApplicationContext(), this);
         HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
-
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        channel.setMethodCallHandler(null);
         this.flutterPluginBinding = null;
     }
 
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
         this.activityPluginBinding = binding;
-        setupChannels(flutterPluginBinding.getBinaryMessenger(), binding.getActivity());
+        setupActivity(binding.getActivity());
     }
 
     @Override
@@ -252,13 +250,11 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
         return true;
     }
 
-    private void setupChannels(BinaryMessenger messenger, Activity activity) {
+    private void setupActivity(Activity activity) {
         if (activityPluginBinding != null) {
             activityPluginBinding.addActivityResultListener(this);
         }
         this.activity = activity;
-        MethodChannel channel = new MethodChannel(messenger, "ed_screen_recorder");
-        channel.setMethodCallHandler(this);
     }
 
     @Override
