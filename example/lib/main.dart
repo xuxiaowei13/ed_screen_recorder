@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> startRecord({required String fileName}) async {
     Directory? tempDir = await getExternalStorageDirectory();
     if (tempDir == null) return;
-    String? tempPath = tempDir.path;
+    String tempPath = tempDir.path;
     try {
       var startResponse = await screenRecorder?.startRecordScreen(
         fileName: "Eren",
