@@ -351,6 +351,9 @@ public class EdScreenRecorderPlugin implements FlutterPlugin, ActivityAware, Met
             Intent permissionIntent = mediaProjectionManager != null
                     ? mediaProjectionManager.createScreenCaptureIntent()
                     : null;
+            if (activity == null) {
+                Log.e("startRecordingScreen:", "activity is null");
+            }
             activity.startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
             return true;
         } catch (Exception e) {
